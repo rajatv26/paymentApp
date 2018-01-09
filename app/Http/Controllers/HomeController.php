@@ -52,29 +52,30 @@ class HomeController extends Controller {
         \Stripe\Stripe::setApiKey('sk_test_KCwU7jVLIoQtECJsXAEXJg1q');
         try {
 
-            // For daily subscription
+            // Creating customer in stripe
             $stripe_customer = \Stripe\Customer::create(array(
                         "email" => $user->email,
                         'source'  => $request->input('stripeToken')
             ));
             
-                $pay = \Stripe\Charge::create ( array (
+            // Charge payment for first time
+            $pay = \Stripe\Charge::create ( array (
                         'customer' => $stripe_customer->id,
                         'amount'   => $membership_price->price * 100,
                         'currency' => 'usd',
                         "description" => "Test payment." 
                         ));
                 
-
+            // Customer book keeping
             $customer = new Customers;
             $customer->customer_id = $stripe_customer->id;
             $customer->plan_id = $membership_price->id;
             $customer->created_at = $stripe_customer->created;
             $customer->user_id = $user->id;
             $customer->updated_at = $stripe_customer->created;
-
             $customer->save();
             
+            //Subscribing Customer to the plan
              $subscription = \Stripe\Subscription::create(array(
                 "customer" => $stripe_customer->id,
                 "items" => array(
